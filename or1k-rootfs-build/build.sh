@@ -14,7 +14,7 @@ OR1K_TOOLCHAIN_SITE=https://github.com/stffrdhrn/or1k-toolchain-build/releases/d
 BUILDROOT_TOOLCHAIN_SITE=https://toolchains.bootlin.com/downloads/releases/toolchains/openrisc/tarballs/
 BUILDROOT_SITE=https://buildroot.org/downloads
 BUSYBOX_SITE=https://busybox.net/downloads
-QEMU_SITE=https://download.qemu.org/
+QEMU_SITE=https://download.qemu.org
 
 # Date used for artifacts
 arc_date=`date -u +%Y%m%d`
@@ -28,7 +28,7 @@ package_url()
   if [[ $ver = or1k-* ]]; then
     short_ver=${ver:5}
     case $pkg in
-      or1k-*) echo $OR1K_TOOLCHAIN_SITE/${ver}/${pkg}${short_ver}.tar.xz ;;
+      or1k-*) echo $OR1K_TOOLCHAIN_SITE/${ver}/${pkg}-${short_ver}.tar.xz ;;
       # Not a toolchain, an actual package
       *)      echo $OR1K_GITHUB_SITE/${pkg}/archive/${ver}.tar.gz ;;
     esac
@@ -77,6 +77,9 @@ archive_src()
     or1k-buildroot-linux-musl-) echo $PWD/openrisc--musl--${ver} ;;
     or1k-buildroot-linux-gnu-) echo $PWD/openrisc--glibc--${ver} ;;
     or1k-buildroot-linux-uclibc-) echo $PWD/openrisc--uclibc--${ver} ;;
+    # FIXME openrisc toolchain pkgs have no version, need to fix
+    # or1k-toolchain-build
+    or1k-none-*) echo $PWD/$pkg ;;
     *) echo $PWD/${pkg}-${ver} ;;
   esac
 }
@@ -132,28 +135,34 @@ gen_release_notes()
 }
 
 # Get the toolchain
-archive_extract ${CROSSTOOL} ${CROSSTOOL_VERSION}
-export PATH=$(archive_src ${CROSSTOOL} ${CROSSTOOL_VERSION})/bin:$PATH
+crosstool_pkg=${CROSSTOOL:0:-1}
+archive_extract $crosstool_pkg ${CROSSTOOL_VERSION}
+export PATH=$(archive_src $crosstool_pkg ${CROSSTOOL_VERSION})/bin:$PATH
+export BUILDDIR=$PWD
+
+echo PATH: $PATH
+${CROSSTOOL}gcc --version
 
 # Get latest build and config scripts
 
 if [ ! -d "or1k-utils" ] ; then
-  git clone https://github.com/stffrdhrn/or1k-utils.git
+  git clone --depth=1 https://github.com/stffrdhrn/or1k-utils.git
 fi
 OR1K_UTILS=$PWD/or1k-utils
 
-# Setup testing infra
+# Setup testing infra, qemu also used for buildroot mkimg
 
-if [ $TEST_ENABLED ] ; then
+if [ $TEST_ENABLED ] || [ $BUILDROOT_ENABLED ] ; then
 
   QEMU_PREFIX=$PWD/or1k-qemu
   if [ ! -d "$QEMU_PREFIX" ] ; then
     archive_extract qemu ${QEMU_VERSION}
+    export QEMU_SRC=$(archive_src qemu ${QEMU_VERSION})
 
-    mkdir qemu-${QEMU_VERSION}/build
-    cd qemu-${QEMU_VERSION}/build
+    mkdir $QEMU_SRC/build
+    cd $QEMU_SRC/build
        $OR1K_UTILS/qemu/config.qemu --prefix=$QEMU_PREFIX
-       make $MAKEOPTS
+       make -j5
        make install
        $QEMU_PREFIX/bin/qemu-or1k
     cd ../..
@@ -167,11 +176,15 @@ fi
 if [ $BUSYBOX_ENABLED ] ; then
   archive_extract busybox ${BUSYBOX_VERSION}
   export BUSYBOX_SRC=$(archive_src busybox ${BUSYBOX_VERSION})
-  export OUTPUT_DIR=$ROOT/build/busybox-rootfs
   $OR1K_UTILS/busybox/busybox.build
 fi
 
 # Build buildroot image
+
+# Cheap sudo pass through as we are root in this container
+sudo() {
+ $@
+}
 
 if [ $BUILDROOT_ENABLED ] ; then
   mkdir buildroot; cd buildroot
@@ -180,6 +193,7 @@ if [ $BUILDROOT_ENABLED ] ; then
     export BUILDROOT_SRC=$(archive_src buildroot ${BUILDROOT_VERSION})
     # because our container is root!
     export FORCE_UNSAFE_CONFIGURE=1
+    export -f sudo
     $OR1K_UTILS/buildroot/buildroot.build qemu_or1k_defconfig
     $OR1K_UTILS/buildroot/buildroot.build
   cd ..

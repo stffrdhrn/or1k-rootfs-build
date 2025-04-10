@@ -7,7 +7,24 @@ artifacts to [github](https://github.com/openrisc/or1k-rootfs-build/releases).
 If you are not a release maintainer you probably don't need this.  You can get
 binaries from our release page mentioned above.
 
-## Building the toolchain
+## Prerequisites
+
+### Network Block Device
+
+The rootfs build has a step that creates a buildroot [qcow2](https://en.wikipedia.org/wiki/Qcow) disk image when `BUILDROOT_ENABLED` is set.
+This requires access to the [network block device](https://docs.kernel.org/admin-guide/blockdev/nbd.html) `ndb` device node
+`/dev/nbd0`.
+
+This is setup with something like:
+
+```bash
+sudo modprobe nbd
+
+# Grant user access to read/write disks
+usermod --append --groups disk myusernam
+```
+
+## Building the rootfs
 
 First build the docker image.  This will setup a sandboxed docker image which
 will run builds for OpenRISC buildroot and busybox rootfs images.
@@ -38,6 +55,7 @@ docker run -it --rm \
   -e LINUX_VERSION=v6.14 \
   -v ${OUTPUTDIR}:/opt/rootfs/output:Z \
   -v ${CACHEDIR}:/opt/rootfs/cache:Z \
+  --device=/dev/fuse --privileged \
   or1k-toolchain-build
 ```
 
