@@ -112,7 +112,7 @@ gen_release_notes()
 {
   {
 
-    echo "## OpenRISC GCC Rootfs $version"
+    echo "## OpenRISC Rootfs $version"
     echo "These rootfs images were built using the "
     echo "[or1k-rootfs-build](https://github.com/stffrdhrn/or1k-rootfs-build) "
     echo " environment configured with the following versions: "
@@ -126,12 +126,22 @@ gen_release_notes()
     echo
     if [ $TEST_ENABLED ] ; then
     echo "## Test Results"
-      echo "Tests for toolchains were run using dejagnu board configs found in"
-      echo "[or1k-utils](https://github.com/stffrdhrn/or1k-utils)."
-      echo "The test results for the toolchains are as follows:"
+      echo "Tests for rootfs images were run using qemu and kernel versions:"
+      echo " - linux : ${LINUX_VERSION}"
+      echo " - qemu : ${QEMU_VERSION}"
     fi
 
   } > /opt/rootfs/output/relnotes-${version}.md
+}
+
+# m4 config creates some files that connot be removed in docker/podman
+# just move them away, otherwise they cause the make clean to fail.
+remove_confdir3() {
+  local src=$1; shift
+
+  for baddir in `find $src -maxdepth 4 -name confdir3`; do
+    mv $baddir $(mktemp --tmpdir -d confdir.junk.XXX)
+  done
 }
 
 # Get the toolchain
@@ -171,7 +181,7 @@ if [ $TEST_ENABLED ] || [ $BUILDROOT_ENABLED ] ; then
   export PATH=$QEMU_PREFIX/bin:$PATH
 fi
 
-# Build Busbox cpio
+# Build Busybox cpio
 
 if [ $BUSYBOX_ENABLED ] ; then
   archive_extract busybox ${BUSYBOX_VERSION}
@@ -181,22 +191,23 @@ fi
 
 # Build buildroot image
 
-# Cheap sudo pass through as we are root in this container
-sudo() {
- $@
-}
-
 if [ $BUILDROOT_ENABLED ] ; then
-  mkdir buildroot; cd buildroot
-    archive_extract buildroot ${BUILDROOT_VERSION}
+  archive_extract buildroot ${BUILDROOT_VERSION}
 
-    export BUILDROOT_SRC=$(archive_src buildroot ${BUILDROOT_VERSION})
-    # because our container is root!
-    export FORCE_UNSAFE_CONFIGURE=1
-    export -f sudo
-    $OR1K_UTILS/buildroot/buildroot.build qemu_or1k_defconfig
-    $OR1K_UTILS/buildroot/buildroot.build
-  cd ..
+  export BUILDROOT_SRC=$(archive_src buildroot ${BUILDROOT_VERSION})
+  # because our container is root!
+  export FORCE_UNSAFE_CONFIGURE=1
+  $OR1K_UTILS/buildroot/buildroot.build qemu_or1k_defconfig
+  $OR1K_UTILS/buildroot/buildroot.build
+
+  mv buildroot-rootfs buildroot-qemu-rootfs
+
+  remove_confdir3 $BUILDROOT_SRC
+  $OR1K_UTILS/buildroot/buildroot.build clean
+  $OR1K_UTILS/buildroot/buildroot.build litex_mor1kx_defconfig
+  $OR1K_UTILS/buildroot/buildroot.build
+
+  mv buildroot-rootfs buildroot-litex-rootfs
 fi
 
 gen_release_notes

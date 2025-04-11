@@ -15,6 +15,7 @@ package_dir()
 }
 
 [ $BUSYBOX_ENABLED ] && package_dir "busybox-rootfs"
-[ $BUILDROOT_ENABLED ] && package_dir "buildroot-rootfs"
+[ $BUILDROOT_ENABLED ] && package_dir "buildroot-qemu-rootfs"
+[ $BUILDROOT_ENABLED ] && package_dir "buildroot-litex-rootfs"
 wait
 
