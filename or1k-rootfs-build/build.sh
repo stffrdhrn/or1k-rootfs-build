@@ -2,8 +2,6 @@
 
 set -ex
 
-. $(dirname $0)/../release.config
-
 # Download anything missing
 
 ROOT=/opt/rootfs
@@ -116,7 +114,7 @@ gen_release_notes()
 
     echo "## OpenRISC Rootfs $version"
     echo "These rootfs images were built using the "
-    echo "[or1k-rootfs-build](https://github.com/${GITHUB_ORG}/${GITHUB_PROJECT}) "
+    echo "[or1k-rootfs-build](https://github.com/stffrdhrn/or1k-rootfs-build) "
     echo " environment configured with the following versions: "
     echo " - toolchain_version : $crosstool_pkg ${CROSSTOOL_VERSION}"
     if [ $BUSYBOX_ENABLED ] ; then
