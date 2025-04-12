@@ -9,19 +9,15 @@ binaries from our release page mentioned above.
 
 ## Prerequisites
 
-### Network Block Device
+### Fuse
 
 The rootfs build has a step that creates a buildroot [qcow2](https://en.wikipedia.org/wiki/Qcow) disk image when `BUILDROOT_ENABLED` is set.
-This requires access to the [network block device](https://docs.kernel.org/admin-guide/blockdev/nbd.html) `ndb` device node
-`/dev/nbd0`.
+This requires access to the [Filesystem in Userspace](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) `fuse` device node `/dev/fuse`.
 
 This is setup with something like:
 
 ```bash
-sudo modprobe nbd
-
-# Grant user access to read/write disks
-usermod --append --groups disk myusernam
+sudo modprobe fuse
 ```
 
 ## Building the rootfs
