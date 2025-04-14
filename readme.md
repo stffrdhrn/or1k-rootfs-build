@@ -40,7 +40,7 @@ can choose versions of BUILDROOT and BUSYBOX.
 # downloaded every time you build
 CACHEDIR=$HOME/work/docker/volumes/rootfs/cache
 # The location where you want your output to go
-OUTPUTDIR=/home/shorne/work/docker/rootfs/output
+OUTPUTDIR=$HOME/work/docker/rootfs/output
 
 docker run -it --rm \
   -e BUILDROOT_ENABLED=1 \
