@@ -1,11 +1,14 @@
 # OpenRISC rootfs build and release scripts
 
-This project contains a set of scripts and docker images for building rootfs
-images for the OpenRISC platform.  Once the builds are done we upload release
-artifacts to [github](https://github.com/openrisc/or1k-rootfs-build/releases).
+This project contains a set of scripts and docker images for building [Linux](https://www.kernel.org)
+[rootfs](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03.html)
+images for the [OpenRISC](https://openrisc.io) platform.  For embedded systems
+like OpenRISC the rootfs along with the linux kernel is essentially our Linux distribution.
 
-If you are not a release maintainer you probably don't need this.  You can get
-binaries from our release page mentioned above.
+Once the builds are done we upload release artifacts to
+[github](https://github.com/openrisc/or1k-rootfs-build/releases).  If you are
+not a release maintainer you probably don't need this.  You can get binaries
+from our release page mentioned above.
 
 ## Prerequisites
 
@@ -48,11 +51,28 @@ docker run -it --rm \
   -e BUILDROOT_VERSION=2025.02 \
   -e BUSYBOX_VERSION=1.37.0 \
   -e QEMU_VERSION=9.2.2 \
-  -e LINUX_VERSION=v6.14 \
+  -e LINUX_VERSION=6.14.2 \
   -v ${OUTPUTDIR}:/opt/rootfs/output:Z \
   -v ${CACHEDIR}:/opt/rootfs/cache:Z \
   --device=/dev/fuse --privileged \
   or1k-toolchain-build
+```
+
+## Building and Running using make
+
+You can also build and run the build container using the `make` wrapper.  This
+can be done with the following:
+
+```
+make image
+make run
+```
+
+Using make we can also override variables when running the container. For example:
+
+```
+# Run in a debug bash shell with an older version of qemu, disable tests
+make QEMU_VERSION=9.1.3 TEST_ENABLED= run-debug
 ```
 
 ## Environment Parameters
@@ -85,6 +105,8 @@ The source versions of components pulled into the toolchain can be adjusted.
    we support booth bootlin and our own toolchains.
     - For version prefix `or1k-buildroot-*` toolchains are downloaded from: https://toolchains.bootlin.com/downloads/releases/toolchains/openrisc/tarballs/
     - For version prefix `or1k-*` toolchains are downloaded from: https://github.com/openrisc/or1k-toolchain-build/releases/download
+ - `LINUX_VERSION` - The linux kernel version used for testing rootfs images.
+ - `QEMU_VERSION` - The qemu simulator version used for booting the OpenRISC linux kernel when running tests.
 
 ## Choosing versions
 

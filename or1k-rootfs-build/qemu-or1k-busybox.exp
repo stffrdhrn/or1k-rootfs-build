@@ -1,0 +1,44 @@
+#!/usr/bin/expect
+#
+
+set prompt "~ #"
+set year [clock format [clock seconds] -format {%Y}]
+
+# Sets up a log file if defined
+log_file "$env(LOG_FILE)"
+
+spawn bash -c "MACHINE=or1k-sim ./or1k-utils/scripts/qemu-or1k-linux"
+expect "Please press Enter to activate this console."
+send -- "\r"
+expect -re $prompt
+
+# Check the linux version
+send -- "uname -a\r"
+expect "Linux"
+expect -re $prompt
+
+# Check busybox is working by printing its details
+send -- "busybox\n"
+expect "BusyBox "
+expect -re $prompt
+
+# Do a time sync, then run some commands to give some time
+# to sync up
+send -- "ntpd -q -p ptbtime1.ptb.de\r"
+expect -re $prompt
+
+# Check basic network connectivity
+send -- "ping -c3 openrisc.io\r"
+expect "3 packets received"
+expect -re $prompt
+
+# Check time now
+send -- "date\r"
+expect -re ".* UTC $year\r"
+expect -re $prompt
+
+send -- "poweroff\r"
+expect "*** MACHINE HALT ***\n"
+
+send_user "SUCCESS\n"
+exit 0

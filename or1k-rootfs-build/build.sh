@@ -14,6 +14,7 @@ OR1K_TOOLCHAIN_SITE=https://github.com/stffrdhrn/or1k-toolchain-build/releases/d
 BUILDROOT_TOOLCHAIN_SITE=https://toolchains.bootlin.com/downloads/releases/toolchains/openrisc/tarballs/
 BUILDROOT_SITE=https://buildroot.org/downloads
 BUSYBOX_SITE=https://busybox.net/downloads
+KERNEL_SITE=https://cdn.kernel.org/pub/linux/kernel
 QEMU_SITE=https://download.qemu.org
 
 # Date used for artifacts
@@ -41,6 +42,7 @@ package_url()
     or1k-buildroot-linux-uclibc-) echo $BUILDROOT_TOOLCHAIN_SITE/openrisc--uclibc--${ver}.tar.xz ;;
     buildroot) echo $BUILDROOT_SITE/${pkg}-${ver}.tar.xz ;;
     busybox)   echo $BUSYBOX_SITE/${pkg}-${ver}.tar.bz2 ;;
+    linux)     echo $KERNEL_SITE/v${ver:0:1}.x/linux-${ver}.tar.xz ;;
     qemu)      echo $QEMU_SITE/${pkg}-${ver}.tar.xz ;;
   esac
 }
@@ -180,6 +182,10 @@ if [ $TEST_ENABLED ] || [ $BUILDROOT_ENABLED ] ; then
 
   export PATH=$QEMU_PREFIX/bin:$PATH
 fi
+if [ $TEST_ENABLED ] ; then
+    export LINUX_SRC=$(archive_src linux ${LINUX_VERSION})
+    archive_extract linux ${LINUX_VERSION}
+fi
 
 # Build Busybox cpio
 
@@ -187,6 +193,17 @@ if [ $BUSYBOX_ENABLED ] ; then
   archive_extract busybox ${BUSYBOX_VERSION}
   export BUSYBOX_SRC=$(archive_src busybox ${BUSYBOX_VERSION})
   $OR1K_UTILS/busybox/busybox.build
+
+  if [ $TEST_ENABLED ] ; then
+    TOOLCHAIN=$CROSSTOOL \
+    $OR1K_UTILS/scripts/make-or1k-linux defconfig
+
+    TOOLCHAIN=$CROSSTOOL \
+    INITRAMFS_SOURCE="$PWD/busybox-rootfs/initramfs  $PWD/busybox-rootfs/initramfs.devnodes" \
+    $OR1K_UTILS/scripts/make-or1k-linux
+
+    LOG_FILE=$PWD/busybox-rootfs/qemu-or1k-busybox-test.log ./qemu-or1k-busybox.exp
+  fi
 fi
 
 # Build buildroot image
@@ -208,6 +225,19 @@ if [ $BUILDROOT_ENABLED ] ; then
   $OR1K_UTILS/buildroot/buildroot.build
 
   mv buildroot-rootfs buildroot-litex-rootfs
+
+  # We only test the qemu image, but oh well
+  if [ $TEST_ENABLED ] ; then
+    $OR1K_UTILS/scripts/make-or1k-linux clean
+
+    TOOLCHAIN=$CROSSTOOL \
+    $OR1K_UTILS/scripts/make-or1k-linux virt_defconfig
+
+    TOOLCHAIN=$CROSSTOOL \
+    $OR1K_UTILS/scripts/make-or1k-linux
+
+    LOG_FILE=$PWD/buildroot-qemu-rootfs/qemu-or1k-buildroot-test.log ./qemu-or1k-buildroot.exp
+  fi
 fi
 
 gen_release_notes

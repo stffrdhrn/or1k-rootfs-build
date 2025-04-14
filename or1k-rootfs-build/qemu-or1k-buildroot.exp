@@ -1,0 +1,51 @@
+#!/usr/bin/expect
+#
+
+set prompt "#"
+set year [clock format [clock seconds] -format {%Y}]
+
+# Sets up a log file if defined
+log_file "$env(LOG_FILE)"
+
+spawn bash -c "DISK=./buildroot-qemu-rootfs/qemu-or1k-rootfs.qcow2 ./or1k-utils/scripts/qemu-or1k-linux"
+expect {
+  -timeout 25 "buildroot login: " {
+    send -- "root\r"
+  } timeout {
+    send_user "Linux boot timeout\n"
+    exit
+  }
+}
+expect -re $prompt
+
+# Check the linux version
+send -- "uname -a\r"
+expect "Linux"
+expect -re $prompt
+
+send -- "mkswap /dev/vda1\r"
+expect "Setting up swapspace "
+expect -re $prompt
+
+send -- "swapon /dev/vda1\r"
+expect -re "Adding .* swap on /dev/vda1."
+expect -re $prompt
+
+send -- "free -h\r"
+expect -re $prompt
+
+# Check basic network connectivity
+send -- "ping -c3 openrisc.io\r"
+expect "3 packets received"
+expect -re $prompt
+
+# Check time now
+send -- "date\r"
+expect -re ".* UTC $year\r"
+expect -re $prompt
+
+send -- "poweroff\r"
+expect "*** MACHINE HALT ***\n"
+
+send_user "SUCCESS\n"
+exit 0

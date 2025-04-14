@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
  file cpio unzip rsync bc \
  python3.11-dev pip ninja-build glib-2.0-dev \
  fdisk parted libnbd-bin fuse3 \
+ bison flex \
+ expect \
  wget
 
 LABEL maintainer Stafford Horne <shorne@gmail.com>
@@ -15,6 +17,8 @@ ENV CROSSTOOL_VERSION=or1k-14.2.0-20250405
 ENV BUILDROOT_VERSION=2025.02
 ENV BUSYBOX_VERSION=1.37.0
 ENV QEMU_VERSION=9.2.2
+ENV LINUX_VERSION=6.14.2
+ENV TEST_ENABLED=1
 
 # Make volume mount points for output + cache of tarballs
 RUN mkdir -p /opt/rootfs/output \
@@ -27,7 +31,7 @@ WORKDIR /opt/rootfs/build
 # Clone this to lock in the code and not get suprises
 run git clone https://github.com/jrwwallis/qcow2fuse.git
 
-COPY *.sh /opt/rootfs/build/
+COPY *.sh *.exp /opt/rootfs/build/
 ADD patches /opt/rootfs/patches
 
 CMD ./build.sh && ./package.sh
