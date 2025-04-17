@@ -166,21 +166,17 @@ OR1K_UTILS=$PWD/or1k-utils
 
 if [ $TEST_ENABLED ] || [ $BUILDROOT_ENABLED ] ; then
 
-  QEMU_PREFIX=$PWD/or1k-qemu
-  if [ ! -d "$QEMU_PREFIX" ] ; then
+  export QEMU_SRC=$(archive_src qemu ${QEMU_VERSION})
+  if [ ! -d "$QEMU_SRC" ] ; then
     archive_extract qemu ${QEMU_VERSION}
-    export QEMU_SRC=$(archive_src qemu ${QEMU_VERSION})
 
     mkdir $QEMU_SRC/build
     cd $QEMU_SRC/build
-       $OR1K_UTILS/qemu/config.qemu --prefix=$QEMU_PREFIX
-       make -j5
-       make install
-       $QEMU_PREFIX/bin/qemu-or1k
+       $OR1K_UTILS/qemu/config.qemu
+       make -j$(nproc)
+       $QEMU_SRC/build/qemu-or1k
     cd ../..
   fi
-
-  export PATH=$QEMU_PREFIX/bin:$PATH
 fi
 if [ $TEST_ENABLED ] ; then
     export LINUX_SRC=$(archive_src linux ${LINUX_VERSION})

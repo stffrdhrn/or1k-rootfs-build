@@ -4,10 +4,17 @@
 set prompt "~ #"
 set year [clock format [clock seconds] -format {%Y}]
 
+# Default handlers
+expect_after {
+  timeout { puts "\nTimeout";    exit 2 }
+  eof     { puts "\nEarly exit"; exit 1 }
+}
+
 # Sets up a log file if defined
 log_file "$env(LOG_FILE)"
 
 spawn bash -c "MACHINE=or1k-sim ./or1k-utils/scripts/qemu-or1k-linux"
+
 expect "Please press Enter to activate this console."
 send -- "\r"
 expect -re $prompt

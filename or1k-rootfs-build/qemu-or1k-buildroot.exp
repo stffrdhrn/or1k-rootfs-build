@@ -1,38 +1,59 @@
 #!/usr/bin/expect
-#
 
-set prompt "#"
+set prompt "# "
 set year [clock format [clock seconds] -format {%Y}]
+
+# Default handlers
+expect_after {
+  timeout { puts "\nTimeout";    exit 2 }
+  eof     { puts "\nEarly exit"; exit 1 }
+}
 
 # Sets up a log file if defined
 log_file "$env(LOG_FILE)"
 
 spawn bash -c "DISK=./buildroot-qemu-rootfs/qemu-or1k-rootfs.qcow2 ./or1k-utils/scripts/qemu-or1k-linux"
-expect {
-  -timeout 25 "buildroot login: " {
-    send -- "root\r"
-  } timeout {
-    send_user "Linux boot timeout\n"
-    exit
-  }
-}
-expect -re $prompt
 
+set timeout 160
+expect {
+  "buildroot login: " {
+    send -- "root\r"
+    exp_continue
+  } timeout {
+    puts "\nLinux boot timeout\n"
+    exit 3
+  }
+  -re $prompt
+}
+
+set timeout 5
 # Check the linux version
 send -- "uname -a\r"
 expect "Linux"
 expect -re $prompt
 
-send -- "mkswap /dev/vda1\r"
-expect "Setting up swapspace "
-expect -re $prompt
+# Check the swap partition is up, if not we create/mount it
+send -- "free\r"
+expect {
+  -re "Swap:.* 0 .* 0 " {
+    puts "Swap not detected, trying to enable..\n"
+    expect -re $prompt
+    send -- "mkswap /dev/vda1\r"
+    expect "Setting up swapspace "
+    expect -re $prompt
 
-send -- "swapon /dev/vda1\r"
-expect -re "Adding .* swap on /dev/vda1."
-expect -re $prompt
+    send -- "swapon /dev/vda1\r"
+    expect -re "Adding .* swap on /dev/vda1."
+    expect -re $prompt
 
-send -- "free -h\r"
-expect -re $prompt
+    send -- "free\r"
+    exp_continue
+  }
+  -re "Swap:.* 2097144 " {
+    exp_continue
+  }
+  -re $prompt
+}
 
 # Check basic network connectivity
 send -- "ping -c3 openrisc.io\r"
@@ -44,8 +65,19 @@ send -- "date\r"
 expect -re ".* UTC $year\r"
 expect -re $prompt
 
-send -- "poweroff\r"
-expect "*** MACHINE HALT ***\n"
+# Cleanup ssh kjeys so each user gets their own
+send -- "rm -rf /etc/ssh/*_key*\n"
+expect -re $prompt
 
-send_user "SUCCESS\n"
-exit 0
+send -- "poweroff\r"
+expect {
+  "*** MACHINE HALT ***\n" {
+    exp_continue
+  }
+  eof {
+    puts "SUCCESS\n"
+    exit 0
+  }
+}
+puts "Something Failed\n"
+exit 55
