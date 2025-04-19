@@ -5,10 +5,15 @@ This project contains a set of scripts and docker images for building [Linux](ht
 images for the [OpenRISC](https://openrisc.io) platform.  For embedded systems
 like OpenRISC the rootfs along with the linux kernel is essentially our Linux distribution.
 
-Once the builds are done we upload release artifacts to
-[github](https://github.com/openrisc/or1k-rootfs-build/releases).  If you are
-not a release maintainer you probably don't need this.  You can get binaries
-from our release page mentioned above.
+If you just want to use the rootfs images check out the latest binaries in the [releases](releases)
+page.
+
+The docker images will setup a OpenRISC software development environment, build
+rootfs images then boot and test the images on [QEMU](https://www.qemu.org)
+using a recent linux kernel.  Once the builds are done we upload release
+artifacts to [github](releases).  If you are not a release maintainer you
+probably don't need this.  You can get binaries from our release page mentioned
+above.
 
 ## Prerequisites
 

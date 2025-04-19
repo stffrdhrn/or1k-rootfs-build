@@ -66,4 +66,4 @@ help:
 	@echo "  DOCKER:     $(DOCKER)"
 	@echo "  DOCKER_RUN: $(DOCKER_RUN)"
 	@echo "  OUTPUTDIR:  $(OUTPUTDIR)"
-	@echo "  DOCKER_RUN: $(CACHEDIR)"
+	@echo "  CACHEDIR:   $(CACHEDIR)"
