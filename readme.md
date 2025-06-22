@@ -51,11 +51,11 @@ docker run -it --rm \
   -e BUSYBOX_ENABLED=1 \
   -e TEST_ENABLED=1 \
   -e CROSSTOOL=or1k-none-linux-musl- \
-  -e CROSSTOOL_VERSION=or1k-14.2.0-20250329 \
-  -e BUILDROOT_VERSION=2025.02 \
+  -e CROSSTOOL_VERSION=or1k-15.1.0-20250621 \
+  -e BUILDROOT_VERSION=2025.05 \
   -e BUSYBOX_VERSION=1.37.0 \
-  -e QEMU_VERSION=9.2.2 \
-  -e LINUX_VERSION=6.14.2 \
+  -e QEMU_VERSION=9.2.3 \
+  -e LINUX_VERSION=6.15.3 \
   -v ${OUTPUTDIR}:/opt/rootfs/output:Z \
   -v ${CACHEDIR}:/opt/rootfs/cache:Z \
   --device=/dev/fuse --privileged \
@@ -96,7 +96,7 @@ builds are enabled.
 
 The source versions of components pulled into the toolchain can be adjusted.
 
- - `BUILDROOT_VERSION` - (default `2025.02`) version downloaded from: https://buildroot.org/downloads
+ - `BUILDROOT_VERSION` - (default `2025.05`) version downloaded from: https://buildroot.org/downloads
  - `BUSYBOX_VERSION` - (default `1.37.0`) version downloaded from: https://busybox.net/downloads
 
 ### Misc Parameters
@@ -105,8 +105,8 @@ The source versions of components pulled into the toolchain can be adjusted.
    and saving output to the `/opt/rootfs/output` output volume.
  - `CROSSTOOL` - (default `or1k-none-linux-musl-`) the cross compiler prefix for the
    toolchain used for building busybox and linux test kernels.
- - `CROSSTOOL_VERSION` - (default `or1k-14.2.0-20250329`) the version of the toolchain
-   we support booth bootlin and our own toolchains.
+ - `CROSSTOOL_VERSION` - (default `or1k-15.1.0-20250621`) the version of the toolchain,
+   we support both bootlin and our own toolchains.
     - For version prefix `or1k-buildroot-*` toolchains are downloaded from: https://toolchains.bootlin.com/downloads/releases/toolchains/openrisc/tarballs/
     - For version prefix `or1k-*` toolchains are downloaded from: https://github.com/openrisc/or1k-toolchain-build/releases/download
  - `LINUX_VERSION` - The linux kernel version used for testing rootfs images.
