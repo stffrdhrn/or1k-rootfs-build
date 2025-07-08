@@ -17,6 +17,9 @@ BUSYBOX_SITE=https://busybox.net/downloads
 KERNEL_SITE=https://cdn.kernel.org/pub/linux/kernel
 QEMU_SITE=https://download.qemu.org
 
+# Busybox+Linux for or1ksim and de0_nano needs to fit withing 32MB
+BUSYBOX_MAX_SIZE_MB=16
+
 # Date used for artifacts
 arc_date=`date -u +%Y%m%d`
 version=${arc_date}
@@ -190,6 +193,10 @@ if [ $BUSYBOX_ENABLED ] ; then
   export BUSYBOX_SRC=$(archive_src busybox ${BUSYBOX_VERSION})
   $OR1K_UTILS/busybox/busybox.build
 
+  # Strip lib files to reduce size
+  cp -a busybox-rootfs busybox-small-rootfs
+  find busybox-small-rootfs/ -type f -name 'lib*.so*' -not -name '*.py' -exec ${CROSSTOOL}strip {} \;
+
   if [ $TEST_ENABLED ] ; then
     TOOLCHAIN=$CROSSTOOL \
     $OR1K_UTILS/scripts/make-or1k-linux defconfig
@@ -199,6 +206,17 @@ if [ $BUSYBOX_ENABLED ] ; then
     $OR1K_UTILS/scripts/make-or1k-linux
 
     LOG_FILE=$PWD/busybox-rootfs/qemu-or1k-busybox-test.log ./qemu-or1k-busybox.exp
+
+    LOG_FILE=$PWD/busybox-small-rootfs/qemu-or1k-busybox-sizecheck.log
+    {
+      echo "Checking small rootfs size:"
+      du -sh busybox-small-rootfs/
+
+      small_rootfs_size=`du -sm busybox-small-rootfs/ | cut -f1`
+      if [ $small_rootfs_size -gt $BUSYBOX_MAX_SIZE_MB ]; then
+	echo "WARNING: The small rootfs is $small_rootfs_size MB, which is bigger than the max of $BUSYBOX_MAX_SIZE_MB MB"
+      fi
+    } >> $LOG_FILE
   fi
 fi
 

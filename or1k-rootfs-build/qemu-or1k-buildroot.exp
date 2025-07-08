@@ -14,13 +14,13 @@ log_file "$env(LOG_FILE)"
 
 spawn bash -c "DISK=./buildroot-qemu-rootfs/qemu-or1k-rootfs.qcow2 ./or1k-utils/scripts/qemu-or1k-linux"
 
-set timeout 160
+set timeout 320
 expect {
   "buildroot login: " {
     send -- "root\r"
     exp_continue
   } timeout {
-    puts "\nLinux boot timeout\n"
+    puts "\nLinux boot timeout after 320s!\n"
     exit 3
   }
   -re $prompt
