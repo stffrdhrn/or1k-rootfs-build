@@ -140,18 +140,31 @@ sha256sum or1k-linux-musl-5.4.0-20170202.tar* | gpg --output sha256sums.asc --cl
 This is specifically for OpenRISC maintainers.  The scripts in `github/` can
 be used to create a release and upload all of the binary artifacts to github.
 
-First setups a `~/.github.api` with a github api token defined in
+First setups a `~/.roofs.release.config` with a github api token defined in
 `github_token`. i.e.
 
-```
-# Github api file for the curl release utilities
-github_token=TOKEN
+```bash
+# The github originization we want to create the rootfs release at
+GITHUB_ORG=${GITHUB_ORG:-openrisc}
+GITHUB_PROJECT=${GITHUB_PROJECT:-or1k-rootfs-build}
+# The remote we want to upload tags to on the remote repo
+GIT_REMOTE=${GIT_REMOTE:-origin}
+
+# User release examples
+# GITHUB_ORG=stffrdhrn
+# GITHUB_PROJECT=or1k-rootfs-build
+# GIT_REMOTE=shorne
+#
+# Fine grain token with Content read/write access for GITHUB_ORG/GITHUB_PROJECT
+# generated at:
+#   User settings > Developer settings > Personal access tokens > Fine grained
+# github_token=...
 ```
 
 Next create a release
 
 ```
-./github/release.sh
+./github/release.sh YYYYMMDD
 ```
 
 Then upload your binaries, it will automatically upload to the last release

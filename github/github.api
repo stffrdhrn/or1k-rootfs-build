@@ -5,9 +5,7 @@ usage() {
   exit 1
 }
 
-if [[ -f $HOME/.${GITHUB_ORG}.${GITHUB_PROJECT}.github.api ]] ; then
-  . $HOME/.${GITHUB_ORG}.${GITHUB_PROJECT}.github.api
-fi
+[ -f $HOME/.rootfs.release.config ] && . $HOME/.rootfs.release.config
 
 [[ -z $github_token ]] && usage
 [[ -z $github_dir ]] && usage
@@ -18,7 +16,7 @@ github_post() {
   declare json_file=$1; shift
   declare url=$1; shift
 
-  curl -v \
+  curl -L \
     -H "Accept: application/vnd.github+json" \
     -H "Authorization: Bearer ${github_token}" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -59,7 +57,7 @@ github_upload() {
     return 1
   fi
 
-  curl -v \
+  curl -L \
     -H "Accept: application/vnd.github+json" \
     -H "Authorization: Bearer ${github_token}" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
