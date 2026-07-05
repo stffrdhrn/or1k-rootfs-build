@@ -69,6 +69,7 @@ expect -re $prompt
 send -- "rm -rf /etc/ssh/*_key*\n"
 expect -re $prompt
 
+set timeout 10
 send -- "poweroff\r"
 expect {
   "*** MACHINE HALT ***\n" {

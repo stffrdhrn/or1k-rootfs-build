@@ -51,11 +51,11 @@ docker run -it --rm \
   -e BUSYBOX_ENABLED=1 \
   -e TEST_ENABLED=1 \
   -e CROSSTOOL=or1k-none-linux-musl- \
-  -e CROSSTOOL_VERSION=or1k-15.1.0-20250621 \
-  -e BUILDROOT_VERSION=2025.05 \
+  -e CROSSTOOL_VERSION=or1k-16.1.0-20260704 \
+  -e BUILDROOT_VERSION=2026.05 \
   -e BUSYBOX_VERSION=1.37.0 \
-  -e QEMU_VERSION=9.2.3 \
-  -e LINUX_VERSION=6.15.3 \
+  -e QEMU_VERSION=11.0.1 \
+  -e LINUX_VERSION=7.0.13 \
   -v ${OUTPUTDIR}:/opt/rootfs/output:Z \
   -v ${CACHEDIR}:/opt/rootfs/cache:Z \
   --device=/dev/fuse --privileged \
@@ -96,7 +96,7 @@ builds are enabled.
 
 The source versions of components pulled into the toolchain can be adjusted.
 
- - `BUILDROOT_VERSION` - (default `2025.05`) version downloaded from: https://buildroot.org/downloads
+ - `BUILDROOT_VERSION` - (default `2026.05`) version downloaded from: https://buildroot.org/downloads
  - `BUSYBOX_VERSION` - (default `1.37.0`) version downloaded from: https://busybox.net/downloads
 
 ### Misc Parameters
